@@ -1,0 +1,694 @@
+<!DOCTYPE html><!-- tells us that we are using an html5 version -->
+<html lang="en"> <!-- this web page is written in English -->
+<head> <!-- its like the control room. it sets up everything the page needs before showing the content of the page -->
+  <meta charset="UTF-8" /> <!-- this can handle almost all characters in the world -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> <!-- makes the website look good on all devices from big desktop screens to small phone screen -->
+  <title>Haven — Mobile Housing Rental</title> <!-- sets the title  of the webpage-->
+  
+  <!-- Leaflet (Map) -->
+    <!-- line 8-14 tells us that, this fill is a CSS stylesheet that styles my webpage(visual styles for the maps controls and titles  -->
+
+  <link
+    rel="stylesheet"   
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+    defer
+  ></script>
+
+  <!-- Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #f7f7f9;
+      --surface: #ffffff;
+      --ink: #111318;
+      --muted: #667085;
+      --brand: #0f172a; /* deep navy */
+      --brand-2: #b48b3c; /* classic gold */
+      --line: #e6e8ee;
+      --ok: #1b9c6e;
+      --warn: #c97a00;
+      --danger: #c0362c;
+      --radius-xl: 20px;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --shadow-1: 0 2px 8px rgba(17,19,24,.06);
+      --shadow-2: 0 10px 30px rgba(17,19,24,.10);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--ink);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Top App Bar */
+    .appbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: linear-gradient(180deg,var(--surface),rgba(255,255,255,.9));
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: saturate(120%) blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .brand .logo {
+      width: 36px; height: 36px;
+      display: grid; place-items: center;
+      border-radius: 12px;
+      background: radial-gradient(120% 120% at 20% 20%, var(--brand-2), #d7b56a 40%, #fff 41%, var(--brand) 42%);
+      color: #fff;
+      box-shadow: var(--shadow-1);
+      font-weight: 700;
+    }
+    .brand .title { font-family: Merriweather, serif; font-weight: 700; letter-spacing: .2px; }
+    .badge { font-size: 10px; color: #fff; background: var(--brand-2); padding: 2px 6px; border-radius: 999px; margin-left: 6px; }
+
+    .actions { display: flex; align-items: center; gap: 8px; }
+    .icon-btn {
+      width: 38px; height: 38px; border: 1px solid var(--line);
+      background: var(--surface); border-radius: 12px; display: grid; place-items: center;
+      box-shadow: var(--shadow-1);
+    }
+
+    /* Tabs (Primary Navigation) */
+    .tabs {
+      position: sticky; top: 64px; z-index: 40; background: var(--bg);
+      display: grid; grid-auto-flow: column; gap: 8px; padding: 10px 16px; overflow-x: auto; border-bottom: 1px solid var(--line);
+    }
+    .tab {
+      white-space: nowrap; padding: 10px 14px; border-radius: 999px; border: 1px solid var(--line);
+      background: var(--surface); color: var(--muted); font-weight: 600; box-shadow: var(--shadow-1);
+    }
+    .tab.active { color: var(--surface); background: var(--brand); border-color: var(--brand); }
+
+    /* Sections */
+    main { padding: 16px; display: grid; gap: 16px; }
+    section.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-xl); box-shadow: var(--shadow-2); overflow: hidden; }
+    .card-header { display:flex; align-items:center; justify-content:space-between; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+    .card-title { display:flex; align-items:center; gap:10px; font-weight: 700; }
+    .card-body { padding: 14px 16px; }
+
+    .searchbar { display:grid; grid-template-columns: 1fr auto; gap:10px; }
+    .field { position:relative; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 12px 12px 12px 40px; border-radius: 12px; border:1px solid var(--line); background:#fff; outline: none;
+    }
+    .field i { position:absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+
+    .btn {
+      display:inline-flex; align-items:center; gap:8px; padding: 12px 14px; border-radius: 12px; border:1px solid var(--brand);
+      background: var(--brand); color:#fff; font-weight: 700; text-decoration: none;
+    }
+    .btn.ghost { background: #fff; color: var(--brand); }
+    .btn.gold { background: var(--brand-2); border-color: var(--brand-2); }
+
+    /* Map & Listings */
+    #map { width: 100%; height: 300px; border-radius: 14px; border: 1px solid var(--line); }
+    .listings { display:grid; gap:12px; margin-top: 12px; }
+    .home {
+      display:grid; grid-template-columns: 100px 1fr; gap: 12px; border:1px solid var(--line); border-radius: 14px; overflow:hidden; background:#fff;
+    }
+    .home .img { background: linear-gradient(135deg,#dfe6f4,#ccd6ea); width:100%; height:100%; min-height:100px; }
+    .home .meta { padding: 10px; display:grid; gap:4px; }
+    .pill { font-size: 12px; padding: 4px 8px; border-radius: 999px; background: #f2f4f7; color: var(--muted); display:inline-flex; gap:6px; align-items:center; }
+
+    /* Services */
+    .services { display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; }
+    .service { border:1px solid var(--line); border-radius: 14px; padding: 12px; background:#fff; display:grid; gap:6px; }
+    .service .head { display:flex; align-items:center; gap:10px; font-weight:700; }
+
+    /* Grid helpers */
+    .row { display:flex; gap:10px; align-items:center; flex-wrap: wrap; }
+    .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+
+    /* Reviews */
+    .review { border-top:1px solid var(--line); padding: 10px 0; }
+
+    /* Group Renting */
+    .groups { display:grid; gap:12px; }
+    .group-card { border:1px solid var(--line); border-radius: 14px; padding:12px; background:#fff; display:grid; gap:6px; }
+
+    /* Drawer / Modal */
+    .drawer { position: fixed; inset: 0; display:none; z-index: 100; }
+    .drawer.open { display:block; }
+    .drawer .backdrop { position:absolute; inset:0; background: rgba(0,0,0,.32); }
+    .drawer .panel { position:absolute; left:0; right:0; bottom:0; background:#fff; border-top-left-radius: 16px; border-top-right-radius: 16px; box-shadow: var(--shadow-2); max-height: 85vh; overflow:auto; }
+    .drawer .panel header { padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
+    .drawer .panel .content { padding:14px 16px; }
+
+    /* Footer */
+    footer { padding: 40px 16px 80px; color: var(--muted); text-align: center; }
+
+    /* Responsive */
+    @media (min-width: 680px) {
+      main { max-width: 860px; margin: 0 auto; }
+      .services { grid-template-columns: repeat(4,1fr); }
+      #map { height: 380px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Top App Bar -->
+  <header class="appbar">
+    <div class="brand">
+      <div class="logo">H</div>
+      <div>
+        <div class="title">Haven</div>
+        <div style="font-size:12px; color: var(--muted);">Formal mobile rentals & services</div>
+      </div>
+      <span class="badge">v1.0</span>
+    </div>
+    <div class="actions">
+      <button class="icon-btn" title="Notifications" id="openNotifications"><i class="ri-notification-3-line"></i></button>
+      <button class="icon-btn" title="Profile"><i class="ri-user-3-line"></i></button>
+    </div>
+  </header>
+
+  <!-- Primary Tabs -->
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-target="#discover"><i class="ri-compass-3-line"></i>&nbsp;Discover</button>
+    <button class="tab" data-target="#book"><i class="ri-calendar-check-line"></i>&nbsp;Book</button>
+    <button class="tab" data-target="#pay"><i class="ri-bank-card-line"></i>&nbsp;Pay</button>
+    <button class="tab" data-target="#services"><i class="ri-tools-line"></i>&nbsp;Services</button>
+    <button class="tab" data-target="#reviews"><i class="ri-chat-1-line"></i>&nbsp;Reviews</button>
+    <button class="tab" data-target="#groups"><i class="ri-team-line"></i>&nbsp;Co‑Living</button>
+  </nav>
+
+  <main>
+    <!-- Discover: Search & Map -->
+    <section id="discover" class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ri-compass-3-line"></i> Discover Homes</div>
+        <div class="row">
+          <button class="btn ghost" id="useLocation"><i class="ri-crosshair-2-line"></i> Near me</button>
+          <button class="btn gold" id="saveSearch"><i class="ri-bookmark-line"></i> Save search</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="searchbar">
+          <div class="field"><i class="ri-search-line"></i><input id="q" placeholder="City, landmark or address" /></div>
+          <button class="btn" id="searchBtn"><i class="ri-search-eye-line"></i> Search</button>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <div class="field" style="flex:1; min-width: 140px;"><i class="ri-map-pin-line"></i>
+            <select id="radius">
+              <option value="2">Within 2 km</option>
+              <option value="5" selected>Within 5 km</option>
+              <option value="10">Within 10 km</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1; min-width: 140px;"><i class="ri-home-2-line"></i>
+            <select id="type">
+              <option value="any" selected>Any type</option>
+              <option>Studio</option>
+              <option>1 Bedroom</option>
+              <option>2 Bedrooms</option>
+              <option>3+ Bedrooms</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1; min-width: 140px;"><i class="ri-money-dollar-circle-line"></i>
+            <select id="budget">
+              <option value="any" selected>Any budget</option>
+              <option value="200">≤ 200k XAF</option>
+              <option value="400">≤ 400k XAF</option>
+              <option value="800">≤ 800k XAF</option>
+              <option value="1200">≤ 1.2M XAF</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="map" style="margin-top:12px;"></div>
+
+        <div class="listings" id="listings"></div>
+      </div>
+    </section>
+
+    <!-- Book: Appointment Drawer Trigger -->
+    <section id="book" class="card" hidden>
+      <div class="card-header">
+        <div class="card-title"><i class="ri-calendar-check-line"></i> Book an Appointment</div>
+        <button class="btn" id="openBooking"><i class="ri-add-line"></i> New booking</button>
+      </div>
+      <div class="card-body">
+        <p style="color:var(--muted);">Schedule viewings, track confirmations, and receive reminders.</p>
+        <div id="bookingList"></div>
+      </div>
+    </section>
+
+    <!-- Pay: Bank or Mobile Money -->
+    <section id="pay" class="card" hidden>
+      <div class="card-header">
+        <div class="card-title"><i class="ri-bank-card-line"></i> Payments</div>
+        <div class="row">
+          <span class="pill"><i class="ri-shield-check-line"></i>Secure</span>
+          <span class="pill"><i class="ri-lock-line"></i>PCI‑aware</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="grid-2">
+          <div class="service">
+            <div class="head"><i class="ri-exchange-dollar-line"></i> Choose Method</div>
+            <label class="row" style="justify-content: space-between;">
+              <span><input type="radio" name="method" value="momo" checked> Mobile Money</span>
+              <span class="pill">MTN / Orange</span>
+            </label>
+            <label><input type="radio" name="method" value="bank"> Bank Transfer</label>
+            <label><input type="radio" name="method" value="card"> Debit / Credit Card</label>
+          </div>
+          <div class="service">
+            <div class="head"><i class="ri-file-list-3-line"></i> Payment Details</div>
+            <div id="paymentDetails"></div>
+            <button class="btn" id="payNow" style="margin-top:8px;"><i class="ri-check-double-line"></i> Pay Now</button>
+            <div id="paymentStatus" style="margin-top:8px; color:var(--muted);"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Services Marketplace -->
+    <section id="services" class="card" hidden>
+      <div class="card-header">
+        <div class="card-title"><i class="ri-tools-line"></i> Home Services</div>
+        <div class="row">
+          <button class="btn ghost" data-filter="all">All</button>
+          <button class="btn ghost" data-filter="Painting">Painting</button>
+          <button class="btn ghost" data-filter="Plumbing">Plumbing</button>
+          <button class="btn ghost" data-filter="Interior">Interior</button>
+          <button class="btn ghost" data-filter="House Staff">House Staff</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="services" id="serviceGrid"></div>
+      </div>
+    </section>
+
+    <!-- Reviews & Comments -->
+    <section id="reviews" class="card" hidden>
+      <div class="card-header">
+        <div class="card-title"><i class="ri-chat-1-line"></i> Reviews & Comments</div>
+        <span class="pill"><i class="ri-star-smile-line"></i> Your voice matters</span>
+      </div>
+      <div class="card-body">
+        <div class="grid-2">
+          <div>
+            <div class="field"><i class="ri-user-3-line"></i><input id="revName" placeholder="Your name" /></div>
+            <div class="field" style="margin-top:8px;"><i class="ri-star-line"></i>
+              <select id="revRating">
+                <option>★★★★★</option>
+                <option>★★★★☆</option>
+                <option>★★★☆☆</option>
+                <option>★★☆☆☆</option>
+                <option>★☆☆☆☆</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <div class="field"><i class="ri-chat-3-line"></i><textarea id="revText" rows="3" placeholder="Write your review or comment..."></textarea></div>
+            <button class="btn" id="postReview" style="margin-top:8px;"><i class="ri-send-plane-2-line"></i> Post</button>
+          </div>
+        </div>
+        <div id="reviewList" style="margin-top:10px;"></div>
+      </div>
+    </section>
+
+    <!-- Co-Living / Group Renting -->
+    <section id="groups" class="card" hidden>
+      <div class="card-header">
+        <div class="card-title"><i class="ri-team-line"></i> Group Renting & Co‑Living</div>
+        <button class="btn" id="createGroup"><i class="ri-user-add-line"></i> Create Group</button>
+      </div>
+      <div class="card-body">
+        <div class="groups" id="groupList"></div>
+      </div>
+    </section>
+
+    <footer>
+      © <span id="year"></span> Haven • A formal, classic and organized mobile rental experience.
+    </footer>
+  </main>
+
+  <!-- Notifications Drawer -->
+  <div class="drawer" id="notifyDrawer" aria-hidden="true">
+    <div class="backdrop" data-close></div>
+    <div class="panel" role="dialog" aria-modal="true">
+      <header>
+        <strong><i class="ri-notification-3-line"></i> Notifications</strong>
+        <button class="icon-btn" data-close><i class="ri-close-line"></i></button>
+      </header>
+      <div class="content">
+        <label class="row" style="justify-content: space-between; margin-bottom:10px;">
+          <span>Enable alerts for saved searches</span>
+          <input type="checkbox" id="notifToggle" />
+        </label>
+        <div id="notifFeed"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking Drawer -->
+  <div class="drawer" id="bookingDrawer" aria-hidden="true">
+    <div class="backdrop" data-close></div>
+    <div class="panel" role="dialog" aria-modal="true">
+      <header>
+        <strong><i class="ri-calendar-check-line"></i> New Viewing</strong>
+        <button class="icon-btn" data-close><i class="ri-close-line"></i></button>
+      </header>
+      <div class="content">
+        <div class="grid-2">
+          <div class="field"><i class="ri-home-2-line"></i><input id="bkHome" placeholder="Property name" /></div>
+          <div class="field"><i class="ri-building-2-line"></i><input id="bkAddress" placeholder="Address" /></div>
+          <div class="field"><i class="ri-calendar-line"></i><input id="bkDate" type="date" /></div>
+          <div class="field"><i class="ri-time-line"></i><input id="bkTime" type="time" /></div>
+          <div class="field" style="grid-column:1 / -1;"><i class="ri-mail-line"></i><input id="bkEmail" placeholder="Your email" /></div>
+        </div>
+        <button class="btn" id="saveBooking" style="margin-top:10px;"><i class="ri-save-3-line"></i> Save Appointment</button>
+        <div id="bkStatus" style="margin-top:8px; color: var(--muted);"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Utilities
+    const $ = (sel, ctx = document) => ctx.querySelector(sel);
+    const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+
+    // Tabs switching
+    $$('#tabs .tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        $$('#tabs .tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.getAttribute('data-target');
+        $$('main > section').forEach(s => s.hidden = (s.id && ('#' + s.id) !== target));
+      })
+    });
+
+    // Footer Year
+    $('#year').textContent = new Date().getFullYear();
+
+    // Map & Listings (Leaflet)
+    let map, markersLayer;
+    const homes = [
+      { id:1, name:'Palm Crest Apartments', type:'2 Bedrooms', price: 450, lat:4.0511, lng:9.7679, address:'Bonapriso, Douala', badges:['New','Furnished'] },
+      { id:2, name:'City Studio Haven', type:'Studio', price: 180, lat:4.055, lng:9.71, address:'Akwa, Douala', badges:['Near transit'] },
+      { id:3, name:'Harbor View Suites', type:'1 Bedroom', price: 320, lat:4.05, lng:9.69, address:'Deïdo, Douala', badges:['Pet‑friendly'] },
+      { id:4, name:'Garden Heights', type:'3+ Bedrooms', price: 900, lat:3.8667, lng:11.5167, address:'Bastos, Yaoundé', badges:['Parking','Gated'] }
+    ];
+
+    function initMap() {
+      map = L.map('map');
+      const start = [4.0511, 9.7679]; // Douala
+      map.setView(start, 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+      markersLayer = L.layerGroup().addTo(map);
+      renderListings(homes);
+    }
+
+    function renderListings(items) {
+      // Clear
+      markersLayer.clearLayers();
+      $('#listings').innerHTML = '';
+
+      items.forEach(h => {
+        const m = L.marker([h.lat, h.lng]).addTo(markersLayer).bindPopup(`<strong>${h.name}</strong><br>${h.address}<br><em>${h.type}</em> · <strong>${h.price}k XAF</strong>`);
+        const el = document.createElement('div');
+        el.className = 'home';
+        el.innerHTML = `
+          <div class="img"></div>
+          <div class="meta">
+            <div class="row" style="justify-content: space-between;">
+              <div style="font-weight:700">${h.name}</div>
+              <div style="font-weight:700">${h.price}k XAF</div>
+            </div>
+            <div style="color:var(--muted);">${h.address}</div>
+            <div class="row">
+              <span class="pill"><i class="ri-home-4-line"></i>${h.type}</span>
+              ${h.badges.map(b=>`<span class='pill'>${b}</span>`).join('')}
+            </div>
+            <div class="row" style="margin-top:6px;">
+              <button class="btn gold" data-book="${h.id}"><i class="ri-calendar-check-line"></i> Book viewing</button>
+              <button class="btn ghost" data-pay="${h.id}"><i class="ri-bank-card-2-line"></i> Pay deposit</button>
+            </div>
+          </div>`;
+        el.querySelector('[data-book]').addEventListener('click', ()=> openBookingWith(h));
+        el.querySelector('[data-pay]').addEventListener('click', ()=> goToPay(h));
+        $('#listings').appendChild(el);
+      });
+    }
+
+    // Search & Filters
+    function applySearch() {
+      const q = $('#q').value.toLowerCase().trim();
+      const type = $('#type').value;
+      const budget = $('#budget').value === 'any' ? Infinity : Number($('#budget').value);
+      const filtered = homes.filter(h =>
+        (!q || h.name.toLowerCase().includes(q) || h.address.toLowerCase().includes(q)) &&
+        (type === 'any' || h.type === type) &&
+        (h.price <= budget)
+      );
+      renderListings(filtered);
+      if(filtered[0]) { map.setView([filtered[0].lat, filtered[0].lng], 12); }
+    }
+    $('#searchBtn').addEventListener('click', applySearch);
+
+    $('#useLocation').addEventListener('click', () => {
+      if (!navigator.geolocation) return alert('Geolocation not supported on this device.');
+      navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude, longitude } = pos.coords;
+        map.setView([latitude, longitude], 13);
+        L.circle([latitude, longitude], { radius: $('#radius').value * 1000, color: '#1e293b' }).addTo(map);
+      }, () => alert('Could not access your location.'));
+    });
+
+    $('#saveSearch').addEventListener('click', () => {
+      addNotif('Search saved. We will notify you when new listings match your filters.');
+    });
+
+    // Notifications
+    const notifFeed = [];
+    function addNotif(text) {
+      notifFeed.unshift({ text, at: new Date() });
+      renderNotifs();
+    }
+    function renderNotifs() {
+      const box = $('#notifFeed');
+      box.innerHTML = notifFeed.map(n => `<div class="review"><div style='font-weight:600'>${n.text}</div><div style='color:var(--muted); font-size:12px;'>${n.at.toLocaleString()}</div></div>`).join('');
+    }
+
+    $('#openNotifications').addEventListener('click', () => $('#notifyDrawer').classList.add('open'));
+    $$('#notifyDrawer [data-close]').forEach(el => el.addEventListener('click', () => $('#notifyDrawer').classList.remove('open')));
+
+    // Booking
+    function openBookingWith(h) {
+      $('#bkHome').value = h.name;
+      $('#bkAddress').value = h.address;
+      $('#bookingDrawer').classList.add('open');
+      $$('#tabs .tab').forEach(b => b.classList.remove('active'));
+      $$('main > section').forEach(s => s.hidden = s.id !== 'book');
+    }
+    function goToPay(h) {
+      $$('#tabs .tab').forEach(b => b.classList.remove('active'));
+      $$('#tabs .tab')[2].classList.add('active');
+      $$('main > section').forEach(s => s.hidden = s.id !== 'pay');
+      $('#paymentStatus').textContent = `Paying deposit for ${h.name} · ${h.price}k XAF`;
+    }
+
+    $('#openBooking').addEventListener('click', () => $('#bookingDrawer').classList.add('open'));
+    $$('#bookingDrawer [data-close]').forEach(el => el.addEventListener('click', () => $('#bookingDrawer').classList.remove('open')));
+
+    const bookings = [];
+    $('#saveBooking').addEventListener('click', () => {
+      const b = {
+        home: $('#bkHome').value.trim(),
+        address: $('#bkAddress').value.trim(),
+        date: $('#bkDate').value,
+        time: $('#bkTime').value,
+        email: $('#bkEmail').value.trim()
+      };
+      if(!b.home || !b.date || !b.time || !b.email) { $('#bkStatus').textContent = 'Please fill all required fields.'; return; }
+      bookings.unshift(b);
+      $('#bkStatus').textContent = 'Appointment saved. A confirmation email will be sent shortly.';
+      renderBookings();
+      $('#bookingDrawer').classList.remove('open');
+      addNotif(`Viewing booked for ${b.home} on ${b.date} at ${b.time}.`);
+    });
+
+    function renderBookings() {
+      const box = $('#bookingList');
+      if (bookings.length === 0) { box.innerHTML = '<div class="pill">No bookings yet</div>'; return; }
+      box.innerHTML = bookings.map(b => `
+        <div class="group-card">
+          <div class="row" style="justify-content: space-between;">
+            <strong>${b.home}</strong>
+            <span class="pill">${b.date} · ${b.time}</span>
+          </div>
+          <div style="color:var(--muted);">${b.address}</div>
+          <div class="row"><i class="ri-mail-line"></i> ${b.email}</div>
+        </div>`).join('');
+    }
+
+    // Payments
+    function renderPaymentForm() {
+      const method = document.querySelector('input[name=method]:checked').value;
+      const c = $('#paymentDetails');
+      if (method === 'momo') {
+        c.innerHTML = `
+          <div class='field'><i class="ri-smartphone-line"></i><input id='pmPhone' placeholder='Mobile money number' /></div>
+          <div class='field' style='margin-top:8px;'><i class="ri-user-3-line"></i><input id='pmName' placeholder='Account holder name' /></div>
+          <div class='field' style='margin-top:8px;'><i class="ri-money-cny-box-line"></i><input id='pmAmount' type='number' placeholder='Amount (XAF)' /></div>`;
+      } else if (method === 'bank') {
+        c.innerHTML = `
+          <div class='field'><i class="ri-bank-line"></i><input id='pmIban' placeholder='IBAN / Account number' /></div>
+          <div class='field' style='margin-top:8px;'><i class="ri-user-3-line"></i><input id='pmName' placeholder='Account holder name' /></div>
+          <div class='field' style='margin-top:8px;'><i class="ri-money-cny-box-line"></i><input id='pmAmount' type='number' placeholder='Amount (XAF)' /></div>`;
+      } else {
+        c.innerHTML = `
+          <div class='field'><i class="ri-credit-card-2-line"></i><input id='pmCard' placeholder='Card number' /></div>
+          <div class='grid-2' style='margin-top:8px;'>
+            <div class='field'><i class="ri-timer-2-line"></i><input id='pmExp' placeholder='MM/YY' /></div>
+            <div class='field'><i class="ri-shield-keyhole-line"></i><input id='pmCvc' placeholder='CVC' /></div>
+          </div>
+          <div class='field' style='margin-top:8px;'><i class="ri-money-cny-box-line"></i><input id='pmAmount' type='number' placeholder='Amount (XAF)' /></div>`;
+      }
+    }
+
+    $$('input[name=method]').forEach(r => r.addEventListener('change', renderPaymentForm));
+    renderPaymentForm();
+
+    $('#payNow').addEventListener('click', () => {
+      const amt = Number($('#pmAmount')?.value || 0);
+      if (!amt || amt <= 0) { $('#paymentStatus').textContent = 'Enter a valid amount to continue.'; return; }
+      const method = document.querySelector('input[name=method]:checked').value;
+      $('#paymentStatus').textContent = 'Processing…';
+      setTimeout(() => {
+        $('#paymentStatus').textContent = `Payment of ${amt.toLocaleString()} XAF via ${method.toUpperCase()} completed. Receipt sent to your email.`;
+        addNotif(`Payment received: ${amt.toLocaleString()} XAF (${method.toUpperCase()}).`);
+      }, 900);
+    });
+
+    // Services Marketplace
+    const providers = [
+      {name:'Pristine Paint Co.', category:'Painting', rating:4.8, desc:'Interior & exterior finishing with premium coats.', price:'From 25k XAF/room'},
+      {name:'AquaFlow Masters', category:'Plumbing', rating:4.6, desc:'Repairs, installations & 24/7 emergency support.', price:'Hourly 15k XAF'},
+      {name:'Vista Interiors', category:'Interior', rating:4.9, desc:'Space planning, decor, and furniture curation.', price:'Custom quote'},
+      {name:'Dwell Staff Agency', category:'House Staff', rating:4.5, desc:'Screened nannies, cleaners & cooks on-call.', price:'Weekly 40k XAF'},
+      {name:'Gold Leaf Painters', category:'Painting', rating:4.7, desc:'Accent walls & facade restoration.', price:'From 30k XAF/room'},
+      {name:'PipeRight', category:'Plumbing', rating:4.4, desc:'Leak detection & bathroom remodels.', price:'From 20k XAF'},
+    ];
+
+    function renderServices(filter='all') {
+      const grid = $('#serviceGrid');
+      const items = providers.filter(p => filter==='all' || p.category===filter);
+      grid.innerHTML = items.map(p => `
+        <div class='service'>
+          <div class='head'><i class="ri-briefcase-3-line"></i> ${p.name}</div>
+          <div class='row'><span class='pill'>${p.category}</span><span class='pill'><i class='ri-star-smile-line'></i> ${p.rating}</span></div>
+          <div style='color:var(--muted);'>${p.desc}</div>
+          <div class='row' style='justify-content: space-between; margin-top:6px;'>
+            <div style='font-weight:700;'>${p.price}</div>
+            <button class='btn ghost'><i class='ri-phone-line'></i> Request quote</button>
+          </div>
+        </div>`).join('');
+    }
+    renderServices();
+    $$('#services .btn.ghost').forEach(b => b.addEventListener('click', () => renderServices(b.dataset.filter)));
+
+    // Reviews
+    const reviews = [
+      {name:'Emmanuel', text:'Smooth booking and polite agents. Found a clean one‑bed in Akwa.', rating:'★★★★★'},
+      {name:'Amina', text:'Mobile money payment worked perfectly. Would recommend.', rating:'★★★★☆'},
+    ];
+    function renderReviews() {
+      const list = $('#reviewList');
+      list.innerHTML = reviews.map(r => `
+        <div class='review'>
+          <div class='row' style='justify-content: space-between;'>
+            <strong>${r.name}</strong>
+            <span>${r.rating}</span>
+          </div>
+          <div>${r.text}</div>
+        </div>`).join('');
+    }
+    renderReviews();
+
+    $('#postReview').addEventListener('click', () => {
+      const name = $('#revName').value.trim() || 'Guest';
+      const text = $('#revText').value.trim();
+      const rating = $('#revRating').value;
+      if (!text) return alert('Please write a short review.');
+      reviews.unshift({name, text, rating});
+      $('#revText').value = '';
+      renderReviews();
+      addNotif('Thank you for your feedback!');
+    });
+
+    // Co‑Living / Group Renting
+    const groups = [
+      {title:'Bastos Professionals', city:'Yaoundé', slots:2, rules:'Non‑smoking, quiet after 10PM', budget:'≤ 500k XAF/room'},
+      {title:'Akwa Techies', city:'Douala', slots:1, rules:'Shared chores, fast Wi‑Fi', budget:'≤ 300k XAF/room'},
+    ];
+    function renderGroups() {
+      const box = $('#groupList');
+      box.innerHTML = groups.map(g => `
+        <div class='group-card'>
+          <div class='row' style='justify-content: space-between;'>
+            <strong><i class='ri-community-line'></i> ${g.title}</strong>
+            <span class='pill'>${g.city}</span>
+          </div>
+          <div class='row'><span class='pill'><i class='ri-user-line'></i> ${g.slots} slot(s)</span><span class='pill'>${g.budget}</span></div>
+          <div style='color:var(--muted);'>${g.rules}</div>
+          <div class='row' style='margin-top:6px;'>
+            <button class='btn gold'><i class='ri-door-open-line'></i> Request to join</button>
+            <button class='btn ghost'><i class='ri-message-2-line'></i> Message host</button>
+          </div>
+        </div>`).join('');
+    }
+    renderGroups();
+
+    $('#createGroup').addEventListener('click', () => {
+      const title = prompt('Group name');
+      const city = prompt('City');
+      const slots = Number(prompt('Available slots')); 
+      const rules = prompt('House rules (short)');
+      const budget = prompt('Budget per room (e.g., ≤ 400k XAF/room)');
+      if (!title || !city || !slots) return;
+      groups.unshift({title, city, slots, rules: rules||'Be respectful', budget: budget||'Discuss'});
+      renderGroups();
+      addNotif(`New co‑living group created: ${title} in ${city}.`);
+    });
+
+    // Payments: update form on load
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      renderPaymentForm();
+      renderBookings();
+    });
+  </script>
+</body>
+</html>
